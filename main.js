@@ -1,470 +1,615 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+(function () {
+  'use strict';
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  // TAB SYSTEM
+  const navTabs = document.querySelectorAll('.nav-tab');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  const footerLinks = document.querySelectorAll('.footer-link');
+  const navTabsContainer = document.querySelector('.nav-tabs');
+  const hamburger = document.getElementById('nav-hamburger');
 
-  <title>Dreamscape</title>
+  function switchTab(tabName) {
+    navTabs.forEach((tab) => {
+      const isActive = tab.dataset.tab === tabName;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', isActive);
+    });
 
-  <meta name="description" content="An interactive website based on emotions, music and relaxation.">
+    tabPanels.forEach((panel) => {
+      const isActive = panel.dataset.panel === tabName;
+      panel.classList.toggle('active', isActive);
+      panel.hidden = !isActive;
+    });
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    navTabsContainer.classList.remove('open');
+    hamburger.classList.remove('active');
+    hamburger.setAttribute('aria-expanded', 'false');
 
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  <link rel="stylesheet" href="css/styles.css">
-</head>
+    setTimeout(initRevealAnimations, 100);
+  }
 
-<body>
+  navTabs.forEach((tab) => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
 
-  <!-- Navbar -->
-  <header class="navbar" id="navbar">
+  footerLinks.forEach((link) => {
+    link.addEventListener('click', () => switchTab(link.dataset.tab));
+  });
 
-    <div class="nav-brand">
-      <span class="nav-logo">🌙</span>
-      <span class="nav-title">Dreamscape</span>
-    </div>
+  document.querySelectorAll('[data-goto]').forEach((btn) => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.goto));
+  });
 
-    <nav class="nav-tabs">
+  // MOBILE MENU
+  hamburger.addEventListener('click', () => {
+    const isOpen = navTabsContainer.classList.toggle('open');
+    hamburger.classList.toggle('active', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
 
-      <button class="nav-tab active" data-tab="home">Home</button>
+  // THEME TOGGLE
+  const themeToggle = document.getElementById('theme-toggle');
+  const html = document.documentElement;
 
-      <button class="nav-tab" data-tab="quiz">Mood Quiz</button>
+  const savedTheme = localStorage.getItem('dreamscape-theme') || 'dark';
+  html.setAttribute('data-theme', savedTheme);
 
-      <button class="nav-tab" data-tab="music">Music</button>
+  themeToggle.addEventListener('click', () => {
+    const next =
+      html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
 
-      <button class="nav-tab" data-tab="journal">Journal</button>
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dreamscape-theme', next);
+  });
 
-      <button class="nav-tab" data-tab="sanctuary">Sanctuary</button>
+  // REVEAL ANIMATIONS
+  function initRevealAnimations() {
+    const reveals = document.querySelectorAll('.tab-panel.active .reveal');
 
-    </nav>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
+      {
+        threshold: 0.15,
+      }
+    );
 
-    <div class="nav-actions">
+    reveals.forEach((el) => {
+      el.classList.remove('visible');
+      observer.observe(el);
+    });
+  }
 
-      <button class="theme-toggle" id="theme-toggle">
-        <span class="theme-icon theme-icon-sun">☀</span>
-        <span class="theme-icon theme-icon-moon">☽</span>
-      </button>
+  // QUIZ
+  const quizIntro = document.getElementById('quiz-intro');
+  const quizQuestion = document.getElementById('quiz-question');
+  const quizResult = document.getElementById('quiz-result');
 
-      <button class="nav-hamburger" id="nav-hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+  const quizStart = document.getElementById('quiz-start');
+  const quizRetry = document.getElementById('quiz-retry');
 
-    </div>
+  const quizQText = document.getElementById('quiz-q-text');
+  const quizOptions = document.getElementById('quiz-options');
 
-  </header>
+  const quizProgressBar = document.getElementById('quiz-progress-bar');
+  const quizProgressText = document.getElementById('quiz-progress-text');
 
-  <main class="main-content">
+  const resultEmotion = document.getElementById('result-emotion');
+  const resultQuote = document.getElementById('result-quote');
+  const resultAura = document.getElementById('result-aura');
+  const resultAuraText = document.getElementById('result-aura-text');
+  const resultVibe = document.getElementById('result-vibe');
 
-    <!-- HOME -->
-    <section class="tab-panel active" id="tab-home" data-panel="home">
+  const quizQuestions = [
+    {
+      text: 'Tonight, the sky feels like…',
+      options: [
+        {
+          label: 'A blanket of endless calm',
+          scores: { serenity: 2, wonder: 1 },
+        },
+        {
+          label: 'A storm waiting to break',
+          scores: { melancholy: 2, longing: 1 },
+        },
+        {
+          label: 'A canvas of burning gold',
+          scores: { euphoria: 2, courage: 1 },
+        },
+      ],
+    },
+    {
+      text: 'Your heart whispers…',
+      options: [
+        {
+          label: 'I need silence',
+          scores: { serenity: 2 },
+        },
+        {
+          label: 'I miss someone',
+          scores: { longing: 2 },
+        },
+        {
+          label: 'I am infinite',
+          scores: { wonder: 2 },
+        },
+      ],
+    },
+  ];
 
-      <div class="hero">
+  const emotionResults = {
+    serenity: {
+      name: 'Serene Dreamer',
+      quote:
+        'Your soul rests in still waters — calm and peaceful.',
+      aura: 'Lavender Mist',
+      auraColor: 'hsla(260, 50%, 60%, 0.6)',
+      vibe: 'Moonlight and calm music',
+    },
 
-        <canvas id="particle-canvas" class="particle-canvas"></canvas>
+    longing: {
+      name: 'Eternal Longing',
+      quote:
+        'You carry deep emotions and beautiful memories.',
+      aura: 'Twilight Violet',
+      auraColor: 'hsla(280, 45%, 50%, 0.6)',
+      vibe: 'Rainy evenings and soft songs',
+    },
 
-        <div class="hero-blobs">
-          <div class="blob blob-1"></div>
-          <div class="blob blob-2"></div>
-          <div class="blob blob-3"></div>
+    wonder: {
+      name: 'Stardust Wanderer',
+      quote:
+        'You find magic in ordinary moments.',
+      aura: 'Celestial Teal',
+      auraColor: 'hsla(180, 50%, 50%, 0.6)',
+      vibe: 'Stars and midnight thoughts',
+    },
+  };
+
+  let currentQuestion = 0;
+
+  let scores = {
+    serenity: 0,
+    longing: 0,
+    wonder: 0,
+  };
+
+  function resetQuiz() {
+    currentQuestion = 0;
+
+    scores = {
+      serenity: 0,
+      longing: 0,
+      wonder: 0,
+    };
+
+    quizIntro.classList.remove('hidden');
+    quizQuestion.classList.add('hidden');
+    quizResult.classList.add('hidden');
+  }
+
+  function showQuestion() {
+    const q = quizQuestions[currentQuestion];
+
+    quizQText.textContent = q.text;
+
+    quizProgressBar.style.width =
+      ((currentQuestion + 1) / quizQuestions.length) * 100 + '%';
+
+    quizProgressText.textContent =
+      `${currentQuestion + 1} / ${quizQuestions.length}`;
+
+    quizOptions.innerHTML = '';
+
+    q.options.forEach((opt) => {
+      const btn = document.createElement('button');
+
+      btn.className = 'quiz-option';
+      btn.textContent = opt.label;
+
+      btn.addEventListener('click', () => {
+        selectAnswer(opt.scores);
+      });
+
+      quizOptions.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(optionScores) {
+    Object.entries(optionScores).forEach(([key, value]) => {
+      scores[key] += value;
+    });
+
+    currentQuestion++;
+
+    if (currentQuestion < quizQuestions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function showResult() {
+    quizQuestion.classList.add('hidden');
+    quizResult.classList.remove('hidden');
+
+    const winner = Object.entries(scores).sort(
+      (a, b) => b[1] - a[1]
+    )[0][0];
+
+    const result = emotionResults[winner];
+
+    resultEmotion.textContent = result.name;
+    resultQuote.textContent = result.quote;
+    resultAuraText.textContent = result.aura;
+    resultVibe.textContent = result.vibe;
+
+    resultAura.style.background = result.auraColor;
+  }
+
+  quizStart.addEventListener('click', () => {
+    resetQuiz();
+
+    quizIntro.classList.add('hidden');
+    quizQuestion.classList.remove('hidden');
+
+    showQuestion();
+  });
+
+  quizRetry.addEventListener('click', resetQuiz);
+
+  // MUSIC SECTION
+  const musicGrid =
+    document.getElementById('music-grid');
+
+  const musicCats =
+    document.querySelectorAll('.music-cat');
+
+  const musicData = {
+    'late-night': [
+      {
+        title: 'Slow Dancing in the Dark',
+        artist: 'Joji',
+      },
+
+      {
+        title: '505',
+        artist: 'Arctic Monkeys',
+      },
+
+      {
+        title: 'Starboy',
+        artist: 'The Weeknd',
+      },
+
+      {
+        title: 'Young and Beautiful',
+        artist: 'Lana Del Rey',
+      },
+
+      {
+        title: 'Blinding Lights',
+        artist: 'The Weeknd',
+      },
+    ],
+
+    rainy: [
+      {
+        title: 'Do I Wanna Know?',
+        artist: 'Arctic Monkeys',
+      },
+
+      {
+        title: 'Apocalypse',
+        artist: 'Cigarettes After Sex',
+      },
+
+      {
+        title: 'Hotel California',
+        artist: 'Eagles',
+      },
+
+      {
+        title: 'The Night We Met',
+        artist: 'Lord Huron',
+      },
+    ],
+
+    overthinking: [
+      {
+        title: 'Fix You',
+        artist: 'Coldplay',
+      },
+
+      {
+        title: 'Breathe Me',
+        artist: 'Sia',
+      },
+
+      {
+        title: 'Who Says',
+        artist: 'Selena Gomez',
+      },
+
+      {
+        title: 'Beautiful Boy',
+        artist: 'John Lennon',
+      },
+    ],
+
+    healing: [
+      {
+        title: 'Sparks',
+        artist: 'Coldplay',
+      },
+
+      {
+        title: 'Vienna',
+        artist: 'Billy Joel',
+      },
+
+      {
+        title: 'Matilda',
+        artist: 'Harry Styles',
+      },
+
+      {
+        title: 'My Way',
+        artist: 'Frank Sinatra',
+      },
+    ],
+
+    romantic: [
+      {
+        title: 'Too Sweet',
+        artist: 'Hozier',
+      },
+
+      {
+        title: 'Lover',
+        artist: 'Taylor Swift',
+      },
+
+      {
+        title: 'I Wanna Be Yours',
+        artist: 'Arctic Monkeys',
+      },
+
+      {
+        title: 'Forever',
+        artist: 'The Little Dippers',
+      },
+    ],
+  };
+
+  function renderMusic(category) {
+    const songs =
+      musicData[category] ||
+      musicData['late-night'];
+
+    musicGrid.innerHTML = songs
+      .map(
+        (song) => `
+        <div class="music-card reveal">
+          <h3>${song.title}</h3>
+          <p>${song.artist}</p>
         </div>
+      `
+      )
+      .join('');
 
-        <div class="hero-content reveal">
+    initRevealAnimations();
+  }
 
-          <p class="hero-eyebrow">
-            Interactive Emotion Website
-          </p>
+  musicCats.forEach((cat) => {
+    cat.addEventListener('click', () => {
+      musicCats.forEach((c) =>
+        c.classList.remove('active')
+      );
 
-          <h1 class="hero-heading">
-            Welcome to
-            <span class="gradient-text">Dreamscape</span>
-          </h1>
+      cat.classList.add('active');
 
-          <p class="hero-sub">
-            Explore emotions, music and relaxing activities through an interactive experience.
-          </p>
+      renderMusic(cat.dataset.category);
+    });
+  });
 
-          <button class="btn-primary hero-cta" data-goto="quiz">
-            Discover Your Mood
-          </button>
+  renderMusic('late-night');
 
-        </div>
+  // JOURNAL
+  const journalInput = document.getElementById('journal-input');
+  const journalTitle = document.getElementById('journal-title');
 
-      </div>
+  const journalSave = document.getElementById('journal-save');
+  const journalClear = document.getElementById('journal-clear');
 
-      <!-- Emotion Cards -->
-      <div class="emotion-gallery">
+  const entriesList = document.getElementById('entries-list');
 
-        <div class="section-header reveal">
-          <h2>Emotions in Motion</h2>
-          <p>Explore different emotional vibes</p>
-        </div>
+  function getEntries() {
+    return JSON.parse(
+      localStorage.getItem('dreamscape-journal') || '[]'
+    );
+  }
 
-        <div class="emotion-track" id="emotion-track">
+  function saveEntries(entries) {
+    localStorage.setItem(
+      'dreamscape-journal',
+      JSON.stringify(entries)
+    );
+  }
 
-          <article class="emotion-card" data-emotion="serenity">
-            <div class="emotion-card-bg" style="--card-hue: 220"></div>
-            <span class="emotion-label">Serenity</span>
+  function renderEntries() {
+    const entries = getEntries();
 
-            <blockquote>
-              "In stillness, the universe whispers its secrets."
-            </blockquote>
-          </article>
+    entriesList.innerHTML = '';
 
-          <article class="emotion-card" data-emotion="longing">
-            <div class="emotion-card-bg" style="--card-hue: 280"></div>
-            <span class="emotion-label">Longing</span>
+    entries.forEach((entry, index) => {
+      const div = document.createElement('div');
 
-            <blockquote>
-              "We are all haunted by the ghosts of what could have been."
-            </blockquote>
-          </article>
+      div.className = 'journal-entry';
 
-          <article class="emotion-card" data-emotion="euphoria">
-            <div class="emotion-card-bg" style="--card-hue: 45"></div>
-            <span class="emotion-label">Euphoria</span>
+      div.innerHTML = `
+        <h3>${entry.title}</h3>
+        <p>${entry.text}</p>
+        <button data-index="${index}" class="delete-btn">
+          Delete
+        </button>
+      `;
 
-            <blockquote>
-              "Joy is the light that leaks through ordinary days."
-            </blockquote>
-          </article>
+      entriesList.appendChild(div);
+    });
 
-          <article class="emotion-card" data-emotion="melancholy">
-            <div class="emotion-card-bg" style="--card-hue: 260"></div>
-            <span class="emotion-label">Melancholy</span>
+    document.querySelectorAll('.delete-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const entries = getEntries();
 
-            <blockquote>
-              "Sadness is just love with nowhere to go."
-            </blockquote>
-          </article>
+        entries.splice(btn.dataset.index, 1);
 
-          <article class="emotion-card" data-emotion="wonder">
-            <div class="emotion-card-bg" style="--card-hue: 180"></div>
-            <span class="emotion-label">Wonder</span>
+        saveEntries(entries);
 
-            <blockquote>
-              "Look up — you are made of the same dust as the stars."
-            </blockquote>
-          </article>
+        renderEntries();
+      });
+    });
+  }
 
-          <article class="emotion-card" data-emotion="courage">
-            <div class="emotion-card-bg" style="--card-hue: 15"></div>
-            <span class="emotion-label">Courage</span>
+  journalSave.addEventListener('click', () => {
+    const title = journalTitle.value.trim();
+    const text = journalInput.value.trim();
 
-            <blockquote>
-              "The brave heart beats loudest in quiet moments."
-            </blockquote>
-          </article>
+    if (!text) return;
 
-        </div>
+    const entries = getEntries();
 
-      </div>
+    entries.unshift({
+      title,
+      text,
+    });
 
-    </section>
+    saveEntries(entries);
 
-    <!-- QUIZ -->
-    <section class="tab-panel" id="tab-quiz" data-panel="quiz" hidden>
+    journalTitle.value = '';
+    journalInput.value = '';
 
-      <div class="quiz-container">
+    renderEntries();
+  });
 
-        <div class="quiz-intro reveal" id="quiz-intro">
+  journalClear.addEventListener('click', () => {
+    localStorage.removeItem('dreamscape-journal');
 
-          <span class="section-tag">
-            Mood Quiz
-          </span>
+    renderEntries();
+  });
 
-          <h2>
-            What emotion matches your mood tonight?
-          </h2>
+  renderEntries();
+  // =========================
+// BREATHING SECTION
+// =========================
 
-          <p>
-            Answer a few questions and discover your emotional vibe.
-          </p>
+const breathingCircle =
+  document.getElementById('breathing-circle');
 
-          <button class="btn-primary" id="quiz-start">
-            Start Quiz
-          </button>
+const breathingLabel =
+  document.getElementById('breathing-label');
 
-        </div>
+const breathingStart =
+  document.getElementById('breathing-start');
 
-        <div class="quiz-question hidden" id="quiz-question">
+const breathingInstruction =
+  document.getElementById('breathing-instruction');
 
-          <div class="quiz-progress">
-            <div class="quiz-progress-bar" id="quiz-progress-bar"></div>
+let breathingActive = false;
 
-            <span class="quiz-progress-text" id="quiz-progress-text">
-              1 / 5
-            </span>
-          </div>
+let breathingTimer = null;
 
-          <h3 class="quiz-q-text" id="quiz-q-text"></h3>
+breathingStart.addEventListener('click', () => {
 
-          <div class="quiz-options" id="quiz-options"></div>
+  if (breathingActive) {
 
-        </div>
+    breathingActive = false;
 
-        <div class="quiz-result hidden" id="quiz-result">
+    clearTimeout(breathingTimer);
 
-          <div class="result-card">
+    breathingCircle.classList.remove(
+      'inhale',
+      'exhale'
+    );
 
-            <div class="result-aura" id="result-aura"></div>
+    breathingLabel.textContent = 'Ready';
 
-            <span class="result-badge">
-              Your Result
-            </span>
+    breathingStart.textContent =
+      'Start Breathing';
 
-            <h3 class="result-emotion" id="result-emotion"></h3>
+    breathingInstruction.textContent =
+      'Press start and follow the rhythm';
 
-            <p class="result-quote" id="result-quote"></p>
+    return;
+  }
 
-            <div class="result-meta">
+  breathingActive = true;
 
-              <div class="result-meta-item">
-                <span class="meta-label">Aura</span>
-                <span class="meta-value" id="result-aura-text"></span>
-              </div>
+  breathingStart.textContent = 'Stop';
 
-              <div class="result-meta-item">
-                <span class="meta-label">Vibe</span>
-                <span class="meta-value" id="result-vibe"></span>
-              </div>
+  breathingInstruction.textContent =
+    'Follow the circle and breathe slowly';
 
-            </div>
+  runBreathCycle();
+});
 
-            <button class="btn-secondary" id="quiz-retry">
-              Retry
-            </button>
+function runBreathCycle() {
 
-          </div>
+  if (!breathingActive) return;
 
-        </div>
+  // INHALE
 
-      </div>
+  breathingCircle.classList.remove('exhale');
 
-    </section>
+  breathingCircle.classList.add('inhale');
 
-    <!-- MUSIC -->
-    <section class="tab-panel" id="tab-music" data-panel="music" hidden>
+  breathingLabel.textContent = 'Inhale';
 
-      <div class="music-page">
+  breathingTimer = setTimeout(() => {
 
-        <div class="section-header reveal">
+    if (!breathingActive) return;
 
-          <span class="section-tag">
-            Music Zone
-          </span>
+    // HOLD
 
-          <h2>
-            Music for Every Mood
-          </h2>
+    breathingLabel.textContent = 'Hold';
 
-          <p>
-            Songs that match your emotions and vibe.
-          </p>
+    breathingTimer = setTimeout(() => {
 
-        </div>
+      if (!breathingActive) return;
 
-        <div class="music-categories">
+      // EXHALE
 
-          <button class="music-cat active" data-category="late-night">
-            Late Night
-          </button>
+      breathingCircle.classList.remove('inhale');
 
-          <button class="music-cat" data-category="rainy">
-            Rainy Day
-          </button>
+      breathingCircle.classList.add('exhale');
 
-          <button class="music-cat" data-category="overthinking">
-            Overthinking
-          </button>
+      breathingLabel.textContent = 'Exhale';
 
-          <button class="music-cat" data-category="healing">
-            Healing
-          </button>
+      breathingTimer = setTimeout(() => {
 
-        </div>
+        if (!breathingActive) return;
 
-        <div class="music-grid" id="music-grid"></div>
+        breathingCircle.classList.remove('exhale');
 
-      </div>
+        breathingLabel.textContent = 'Rest';
 
-    </section>
+        breathingTimer = setTimeout(
+          runBreathCycle,
+          1500
+        );
 
-    <!-- JOURNAL -->
-    <section class="tab-panel" id="tab-journal" data-panel="journal" hidden>
+      }, 4000);
 
-      <div class="journal-page">
+    }, 2000);
 
-        <div class="section-header reveal">
+  }, 4000);
+}
 
-          <span class="section-tag">
-            Journal Space
-          </span>
-
-          <h2>
-            Emotional Journal
-          </h2>
-
-          <p>
-            Write your thoughts and save your feelings.
-          </p>
-
-        </div>
-
-        <div class="journal-layout reveal">
-
-          <div class="journal-editor glass-card">
-
-            <div class="journal-mood-picker">
-
-              <span class="picker-label">
-                How are you feeling?
-              </span>
-
-              <div class="mood-chips" id="mood-chips">
-
-                <button class="mood-chip" data-mood="calm">🌊</button>
-                <button class="mood-chip" data-mood="happy">✨</button>
-                <button class="mood-chip" data-mood="sad">🌧</button>
-                <button class="mood-chip" data-mood="anxious">🌀</button>
-
-              </div>
-
-            </div>
-
-            <textarea
-              id="journal-input"
-              class="journal-textarea"
-              placeholder="Write your thoughts..."
-            ></textarea>
-
-            <div class="journal-actions">
-
-              <input
-                type="text"
-                id="journal-title"
-                class="journal-title-input"
-                placeholder="Entry title"
-              >
-
-              <button class="btn-primary" id="journal-save">
-                Save Entry
-              </button>
-
-            </div>
-
-          </div>
-
-          <div class="journal-entries glass-card">
-
-            <h3 class="entries-heading">
-              Saved Entries
-            </h3>
-
-            <div class="entries-list" id="entries-list">
-
-              <p class="entries-empty" id="entries-empty">
-                No entries yet.
-              </p>
-
-            </div>
-
-            <button class="btn-ghost" id="journal-clear">
-              Clear All
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- SANCTUARY -->
-    <section class="tab-panel" id="tab-sanctuary" data-panel="sanctuary" hidden>
-
-      <div class="sanctuary-page">
-
-        <div class="sanctuary-bg">
-
-          <div class="sanctuary-orb orb-1"></div>
-          <div class="sanctuary-orb orb-2"></div>
-          <div class="sanctuary-orb orb-3"></div>
-
-        </div>
-
-        <div class="section-header reveal">
-
-          <span class="section-tag">
-            Relax Zone
-          </span>
-
-          <h2>
-            Sanctuary
-          </h2>
-
-          <p>
-            Relax, breathe and slow down.
-          </p>
-
-        </div>
-
-        <div class="sanctuary-content reveal">
-
-          <div class="breathing-card glass-card">
-
-            <h3>Breathing Circle</h3>
-
-            <p class="breathing-instruction" id="breathing-instruction">
-              Press start and follow the rhythm
-            </p>
-
-            <div class="breathing-circle-wrap">
-
-              <div class="breathing-circle" id="breathing-circle">
-                <span id="breathing-label">Ready</span>
-              </div>
-
-            </div>
-
-            <button class="btn-primary" id="breathing-start">
-              Start Breathing
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-
-    <div class="footer-inner">
-
-      <div class="footer-brand">
-        <span>🌙 Dreamscape</span>
-        <p>Interactive Emotion Website</p>
-      </div>
-
-      <p class="footer-copy">
-        © 2026 Dreamscape
-      </p>
-
-    </div>
-
-  </footer>
-
-  <script src="js/main.js"></script>
-
-</body>
-</html>
+})();
